@@ -1,0 +1,38 @@
+name: Deploy web build to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Generate web platform files
+        # ios/android/macos/web are gitignored (regenerated locally with
+        # `flutter create .`), so recreate the web/ scaffold here too.
+        run: flutter create --platforms=web .
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build web release
+        run: flutter build web --release --base-href /kcho/
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: build/web

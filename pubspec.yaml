@@ -1,0 +1,27 @@
+name: k_cho
+description: "K帳 — JLPT vocabulary and grammar study app with Myanmar translations. Offline-first, iOS-focused."
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+  flutter: ">=3.19.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  uuid: ^4.5.1
+  shared_preferences: ^2.3.2
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.9.4
+  flutter_timezone: ^3.0.1
+  share_plus: ^10.1.2
+
+dev_dependencies:
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: false

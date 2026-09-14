@@ -1,0 +1,27 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+# pubspec.lock is committed on purpose — this is an app, not a package,
+# so pinning exact dependency versions keeps local and CI builds identical.
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# macOS
+.DS_Store
+
+# Generated platform folders (recreate with `flutter create .`)
+# Remove the lines below if you want to commit them.
+/ios/
+/android/
+/macos/
+/linux/
+/windows/
+/web/
