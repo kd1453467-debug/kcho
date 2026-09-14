@@ -17,7 +17,11 @@ class Entry extends HiveObject {
     this.correctCount = 0,
     this.wrongCount = 0,
     this.lastReviewed,
-  });
+    this.easeFactor = 2.5,
+    this.interval = 0,
+    this.repetitions = 0,
+    DateTime? nextReviewDate,
+  }) : nextReviewDate = nextReviewDate ?? DateTime.now();
 
   /// Stable UUID, also used as the Hive key.
   final String id;
@@ -41,6 +45,24 @@ class Entry extends HiveObject {
   DateTime? lastReviewed;
   final DateTime createdAt;
 
+  // --- SM-2 spaced-repetition scheduling (see Sm2Service) ---
+  // Additive to correctCount/wrongCount above, not a replacement: those two
+  // still drive the Progress screen's mastered/learning stats, while these
+  // drive which entries the quiz should prioritize.
+
+  /// How quickly the review interval grows after each correct answer.
+  double easeFactor;
+
+  /// Days until the next review, per the SM-2 algorithm.
+  int interval;
+
+  /// Consecutive correct answers since the last lapse.
+  int repetitions;
+
+  /// When this entry is next due for review. Defaults to "now" for new
+  /// entries, so they're immediately eligible for their first quiz.
+  DateTime nextReviewDate;
+
   bool get isTango => type == EntryType.tango;
 
   /// Mastered = answered correctly at least 3 times with no wrong answers.
@@ -48,6 +70,9 @@ class Entry extends HiveObject {
 
   /// Has been quizzed at least once but is not yet mastered.
   bool get isLearning => (correctCount + wrongCount) > 0 && !isMastered;
+
+  /// Due for spaced-repetition review — on or before now.
+  bool get isDue => !nextReviewDate.isAfter(DateTime.now());
 
   void recordAnswer({required bool correct}) {
     if (correct) {
@@ -70,6 +95,10 @@ class Entry extends HiveObject {
         'wrongCount': wrongCount,
         'lastReviewed': lastReviewed?.toIso8601String(),
         'createdAt': createdAt.toIso8601String(),
+        'easeFactor': easeFactor,
+        'interval': interval,
+        'repetitions': repetitions,
+        'nextReviewDate': nextReviewDate.toIso8601String(),
       };
 }
 
@@ -95,13 +124,20 @@ class EntryAdapter extends TypeAdapter<Entry> {
       wrongCount: fields[7] as int? ?? 0,
       lastReviewed: fields[8] as DateTime?,
       createdAt: fields[9] as DateTime,
+      // Fields 10-13 are absent on records written before SM-2 was added;
+      // fall back to the same defaults Entry's constructor uses for new
+      // entries, so old data becomes immediately due like a fresh entry.
+      easeFactor: fields[10] as double? ?? 2.5,
+      interval: fields[11] as int? ?? 0,
+      repetitions: fields[12] as int? ?? 0,
+      nextReviewDate: fields[13] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Entry obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(14)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -121,7 +157,15 @@ class EntryAdapter extends TypeAdapter<Entry> {
       ..writeByte(8)
       ..write(obj.lastReviewed)
       ..writeByte(9)
-      ..write(obj.createdAt);
+      ..write(obj.createdAt)
+      ..writeByte(10)
+      ..write(obj.easeFactor)
+      ..writeByte(11)
+      ..write(obj.interval)
+      ..writeByte(12)
+      ..write(obj.repetitions)
+      ..writeByte(13)
+      ..write(obj.nextReviewDate);
   }
 
   @override

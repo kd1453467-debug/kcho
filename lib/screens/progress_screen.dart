@@ -23,6 +23,7 @@ class ProgressScreen extends StatelessWidget {
             final mastered = entries.where((e) => e.isMastered).length;
             final learning = entries.where((e) => e.isLearning).length;
             final notStarted = total - mastered - learning;
+            final dueToday = entries.where((e) => e.isDue).length;
 
             return ListView(
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -31,6 +32,7 @@ class ProgressScreen extends StatelessWidget {
                 _StatCard(label: 'マスター済み', value: mastered),
                 _StatCard(label: '学習中', value: learning),
                 _StatCard(label: '未着手', value: notStarted),
+                _StatCard(label: '今日復習すべき件数', value: dueToday),
                 const SizedBox(height: 12),
                 _StatCard(
                   label: '単語',

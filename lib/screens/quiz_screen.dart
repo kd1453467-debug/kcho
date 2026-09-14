@@ -3,11 +3,10 @@ import 'dart:math';
 import 'package:flutter/cupertino.dart';
 
 import '../app_scope.dart';
-import '../models/entry.dart';
-import '../services/entry_repository.dart';
+import '../services/quiz_service.dart';
+import '../services/sm2_service.dart';
 import '../theme/app_colors.dart';
 
-const int _sessionSize = 50;
 const Duration _advanceDelay = Duration(milliseconds: 900);
 
 class QuizScreen extends StatefulWidget {
@@ -19,56 +18,15 @@ class QuizScreen extends StatefulWidget {
 
 enum _Phase { idle, running, done }
 
-class _QuizQuestion {
-  _QuizQuestion({
-    required this.entry,
-    required this.options,
-    required this.correctIndex,
-  });
-
-  final Entry entry;
-  final List<String> options;
-  final int correctIndex;
-}
-
 class _QuizScreenState extends State<QuizScreen> {
   final Random _rng = Random();
 
   _Phase _phase = _Phase.idle;
-  List<_QuizQuestion> _questions = [];
+  List<QuizQuestion> _questions = [];
   int _current = 0;
   int _score = 0;
   int? _selectedIndex;
   bool _answered = false;
-
-  List<_QuizQuestion> _buildSession(EntryRepository repo) {
-    final pool = repo
-        .all()
-        .where((e) => e.meaningMy.trim().isNotEmpty)
-        .toList()
-      ..shuffle(_rng);
-
-    final take = min(_sessionSize, pool.length);
-    final chosen = pool.take(take).toList();
-
-    return chosen.map((entry) {
-      final distractors = pool
-          .where((e) => e.id != entry.id && e.meaningMy.trim() != entry.meaningMy.trim())
-          .map((e) => e.meaningMy.trim())
-          .toSet()
-          .toList()
-        ..shuffle(_rng);
-
-      final options = <String>[entry.meaningMy.trim(), ...distractors.take(3)]
-        ..shuffle(_rng);
-
-      return _QuizQuestion(
-        entry: entry,
-        options: options,
-        correctIndex: options.indexOf(entry.meaningMy.trim()),
-      );
-    }).toList();
-  }
 
   void _start() {
     final repo = AppScope.of(context);
@@ -90,7 +48,7 @@ class _QuizScreenState extends State<QuizScreen> {
       return;
     }
     setState(() {
-      _questions = _buildSession(repo);
+      _questions = QuizService.buildSession(repo, random: _rng);
       _current = 0;
       _score = 0;
       _selectedIndex = null;
@@ -105,7 +63,10 @@ class _QuizScreenState extends State<QuizScreen> {
     final question = _questions[_current];
     final correct = index == question.correctIndex;
 
+    // correctCount/wrongCount still drive the Progress screen's stats;
+    // the SM-2 fields drive which entries the next quiz prioritizes.
     question.entry.recordAnswer(correct: correct);
+    Sm2Service.review(question.entry, correct: correct);
     await repo.save(question.entry);
 
     setState(() {
@@ -163,7 +124,7 @@ class _IdleView extends StatelessWidget {
   Widget build(BuildContext context) {
     final repo = AppScope.of(context);
     final poolSize = repo.all().where((e) => e.meaningMy.trim().isNotEmpty).length;
-    final sessionCount = poolSize >= _sessionSize ? _sessionSize : poolSize;
+    final sessionCount = poolSize >= QuizService.sessionSize ? QuizService.sessionSize : poolSize;
 
     return Center(
       child: Column(
@@ -194,7 +155,7 @@ class _QuestionView extends StatelessWidget {
     required this.onSelect,
   });
 
-  final _QuizQuestion question;
+  final QuizQuestion question;
   final int index;
   final int total;
   final int? selectedIndex;
