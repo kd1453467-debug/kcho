@@ -38,6 +38,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
 
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
+        transitionBetweenRoutes: false,
         middle: SizedBox(
           width: 220,
           child: TypeSegmentedControl(value: _type, onChanged: _changeType),

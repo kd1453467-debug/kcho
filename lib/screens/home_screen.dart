@@ -24,6 +24,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
+        // The segmented control's custom TextStyle isn't compatible with the
+        // nav bar's automatic title Hero transition (mismatched
+        // TextStyle.inherit crashes on mount) — turn that transition off.
+        transitionBetweenRoutes: false,
         middle: SizedBox(
           width: 220,
           child: TypeSegmentedControl(

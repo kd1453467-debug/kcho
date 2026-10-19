@@ -21,6 +21,7 @@ class TypeSegmentedControl extends StatelessWidget {
       child: Text(
         text,
         style: TextStyle(
+          inherit: false,
           color: selected ? CupertinoColors.white : AppColors.inkPrimary,
           fontWeight: FontWeight.w600,
         ),

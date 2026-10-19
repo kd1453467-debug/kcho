@@ -7,7 +7,7 @@ class SettingsStore {
   static const _keyReminderEnabled = 'reminder_enabled';
   static const _keyReminderHour = 'reminder_hour';
   static const _keyReminderMinute = 'reminder_minute';
-  static const _keyGeminiApiKey = 'gemini_api_key';
+  static const _keyGroqApiKey = 'groq_api_key';
 
   static const int defaultReminderHour = 20;
   static const int defaultReminderMinute = 0;
@@ -46,15 +46,15 @@ class SettingsStore {
     await prefs.setInt(_keyReminderMinute, minute);
   }
 
-  /// Gemini API key for the AI auto-fill feature (see GeminiService). Kept
+  /// Groq API key for the AI auto-fill feature (see GroqService). Kept
   /// in on-device prefs only — never committed to source control.
-  Future<String> getGeminiApiKey() async {
+  Future<String> getGroqApiKey() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_keyGeminiApiKey) ?? '';
+    return prefs.getString(_keyGroqApiKey) ?? '';
   }
 
-  Future<void> setGeminiApiKey(String value) async {
+  Future<void> setGroqApiKey(String value) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_keyGeminiApiKey, value);
+    await prefs.setString(_keyGroqApiKey, value);
   }
 }

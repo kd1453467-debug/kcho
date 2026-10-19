@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 
 import '../app_scope.dart';
 import '../models/entry.dart';
-import '../services/gemini_service.dart';
+import '../services/groq_service.dart';
 import '../services/settings_store.dart';
 import '../theme/app_colors.dart';
 import '../widgets/type_segmented_control.dart';
@@ -93,15 +93,15 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
       return;
     }
 
-    final apiKey = await _settingsStore.getGeminiApiKey();
+    final apiKey = await _settingsStore.getGroqApiKey();
     if (apiKey.isEmpty) {
-      await _showAlert('APIキーが未設定です', '設定タブで Gemini API キーを入力してください。');
+      await _showAlert('APIキーが未設定です', '設定タブで Groq API キーを入力してください。');
       return;
     }
 
     setState(() => _isAutoFilling = true);
     try {
-      final result = await GeminiService.autoFill(apiKey: apiKey, type: _type, term: term);
+      final result = await GroqService.autoFill(apiKey: apiKey, type: _type, term: term);
       if (!mounted) return;
       setState(() {
         if (_type == EntryType.tango && (result.reading ?? '').isNotEmpty) {
@@ -113,7 +113,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
     } catch (e) {
       if (!mounted) return;
       final message =
-          e is GeminiServiceException ? e.message : 'AI補完に失敗しました。通信環境を確認してください。';
+          e is GroqServiceException ? e.message : 'AI補完に失敗しました。通信環境を確認してください。';
       await _showAlert('AI補完エラー', message);
     } finally {
       if (mounted) setState(() => _isAutoFilling = false);
