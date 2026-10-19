@@ -7,6 +7,7 @@ class SettingsStore {
   static const _keyReminderEnabled = 'reminder_enabled';
   static const _keyReminderHour = 'reminder_hour';
   static const _keyReminderMinute = 'reminder_minute';
+  static const _keyGeminiApiKey = 'gemini_api_key';
 
   static const int defaultReminderHour = 20;
   static const int defaultReminderMinute = 0;
@@ -43,5 +44,17 @@ class SettingsStore {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_keyReminderHour, hour);
     await prefs.setInt(_keyReminderMinute, minute);
+  }
+
+  /// Gemini API key for the AI auto-fill feature (see GeminiService). Kept
+  /// in on-device prefs only — never committed to source control.
+  Future<String> getGeminiApiKey() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyGeminiApiKey) ?? '';
+  }
+
+  Future<void> setGeminiApiKey(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyGeminiApiKey, value);
   }
 }

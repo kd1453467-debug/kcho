@@ -21,7 +21,9 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _settingsStore = SettingsStore();
   final _nameController = TextEditingController();
+  final _geminiKeyController = TextEditingController();
   Timer? _nameSaveTimer;
+  Timer? _geminiKeySaveTimer;
 
   bool _loading = true;
   String _displayName = '';
@@ -39,6 +41,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final name = await _settingsStore.getDisplayName();
     final enabled = await _settingsStore.getReminderEnabled();
     final (hour, minute) = await _settingsStore.getReminderTime();
+    final geminiKey = await _settingsStore.getGeminiApiKey();
     if (!mounted) return;
     setState(() {
       _displayName = name;
@@ -46,6 +49,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _reminderEnabled = enabled;
       _reminderHour = hour;
       _reminderMinute = minute;
+      _geminiKeyController.text = geminiKey;
       _loading = false;
     });
   }
@@ -53,7 +57,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void dispose() {
     _nameSaveTimer?.cancel();
+    _geminiKeySaveTimer?.cancel();
     _nameController.dispose();
+    _geminiKeyController.dispose();
     super.dispose();
   }
 
@@ -62,6 +68,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _nameSaveTimer?.cancel();
     _nameSaveTimer = Timer(const Duration(milliseconds: 500), () {
       _settingsStore.setDisplayName(value.trim());
+    });
+  }
+
+  void _onGeminiKeyChanged(String value) {
+    _geminiKeySaveTimer?.cancel();
+    _geminiKeySaveTimer = Timer(const Duration(milliseconds: 500), () {
+      _settingsStore.setGeminiApiKey(value.trim());
     });
   }
 
@@ -195,6 +208,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             onDateTimeChanged: _onTimeChanged,
                           ),
                         ),
+                    ],
+                  ),
+                  _SettingsSection(
+                    header: 'AI機能',
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                        child: CupertinoTextField(
+                          controller: _geminiKeyController,
+                          onChanged: _onGeminiKeyChanged,
+                          placeholder: 'Gemini API キー',
+                          obscureText: true,
+                          decoration: const BoxDecoration(),
+                          style: const TextStyle(color: AppColors.inkPrimary, fontSize: 16),
+                          placeholderStyle: const TextStyle(color: AppColors.inkSecondary),
+                        ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(16, 0, 16, 10),
+                        child: Text(
+                          'aistudio.google.com で無料で取得できます。入力すると「新規登録」画面でAI自動補完が使えます。',
+                          style: TextStyle(color: AppColors.inkSecondary, fontSize: 13),
+                        ),
+                      ),
                     ],
                   ),
                   _SettingsSection(

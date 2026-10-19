@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 
 import '../app_scope.dart';
 import '../models/entry.dart';
+import '../services/gemini_service.dart';
+import '../services/settings_store.dart';
 import '../theme/app_colors.dart';
 import '../widgets/type_segmented_control.dart';
 
@@ -17,11 +19,15 @@ class AddEntryScreen extends StatefulWidget {
 }
 
 class _AddEntryScreenState extends State<AddEntryScreen> {
+  final _settingsStore = SettingsStore();
+
   late final TextEditingController _term;
   late final TextEditingController _reading;
   late final TextEditingController _meaning;
   late final TextEditingController _example;
   late EntryType _type;
+
+  bool _isAutoFilling = false;
 
   bool get _isEditing => widget.existing != null;
 
@@ -75,6 +81,43 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
       await repo.save(existing);
     }
     navigator.pop();
+  }
+
+  Future<void> _autoFill() async {
+    final term = _term.text.trim();
+    if (term.isEmpty) {
+      await _showAlert(
+        '入力してください',
+        '先に「${_type == EntryType.tango ? '漢字 / 語' : 'パターン'}」を入力してください。',
+      );
+      return;
+    }
+
+    final apiKey = await _settingsStore.getGeminiApiKey();
+    if (apiKey.isEmpty) {
+      await _showAlert('APIキーが未設定です', '設定タブで Gemini API キーを入力してください。');
+      return;
+    }
+
+    setState(() => _isAutoFilling = true);
+    try {
+      final result = await GeminiService.autoFill(apiKey: apiKey, type: _type, term: term);
+      if (!mounted) return;
+      setState(() {
+        if (_type == EntryType.tango && (result.reading ?? '').isNotEmpty) {
+          _reading.text = result.reading!;
+        }
+        _meaning.text = result.meaningMy;
+        _example.text = result.exampleSentence;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      final message =
+          e is GeminiServiceException ? e.message : 'AI補完に失敗しました。通信環境を確認してください。';
+      await _showAlert('AI補完エラー', message);
+    } finally {
+      if (mounted) setState(() => _isAutoFilling = false);
+    }
   }
 
   Future<void> _showAlert(String title, String message) {
@@ -149,6 +192,36 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
             _FieldBox(
               controller: _term,
               placeholder: isTango ? '例: 勉強' : '例: 〜たほうがいい',
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 12, top: 4),
+              child: CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: _isAutoFilling ? null : _autoFill,
+                child: _isAutoFilling
+                    ? const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CupertinoActivityIndicator(radius: 8),
+                          SizedBox(width: 8),
+                          Text(
+                            'AIが生成中…',
+                            style: TextStyle(color: AppColors.inkSecondary, fontSize: 14),
+                          ),
+                        ],
+                      )
+                    : const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(CupertinoIcons.sparkles, size: 16, color: AppColors.hankoRed),
+                          SizedBox(width: 6),
+                          Text(
+                            'AIで自動補完',
+                            style: TextStyle(color: AppColors.hankoRed, fontSize: 14),
+                          ),
+                        ],
+                      ),
+              ),
             ),
             if (isTango) ...[
               const SizedBox(height: 16),

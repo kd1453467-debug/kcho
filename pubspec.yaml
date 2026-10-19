@@ -19,6 +19,7 @@ dependencies:
   timezone: ^0.9.4
   flutter_timezone: ^3.0.1
   share_plus: ^10.1.2
+  http: ^1.2.2
 
 dev_dependencies:
   flutter_lints: ^4.0.0
