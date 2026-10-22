@@ -13,7 +13,10 @@ class ProgressScreen extends StatelessWidget {
     final repo = AppScope.of(context);
 
     return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(middle: Text('進捗')),
+      navigationBar: const CupertinoNavigationBar(
+        transitionBetweenRoutes: false,
+        middle: Text('進捗'),
+      ),
       child: SafeArea(
         child: ValueListenableBuilder<Box<Entry>>(
           valueListenable: repo.listenable(),

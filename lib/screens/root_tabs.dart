@@ -5,6 +5,7 @@ import 'flashcard_screen.dart';
 import 'home_screen.dart';
 import 'progress_screen.dart';
 import 'quiz_screen.dart';
+import 'reading_screen.dart';
 import 'settings_screen.dart';
 
 /// Bottom tab bar that hosts the main sections of the app.
@@ -32,6 +33,10 @@ class RootTabs extends StatelessWidget {
             label: 'Quiz',
           ),
           BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.doc_text_search),
+            label: '読解',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(CupertinoIcons.chart_bar),
             label: 'Progress',
           ),
@@ -50,8 +55,10 @@ class RootTabs extends StatelessWidget {
           case 2:
             return CupertinoTabView(builder: (_) => const QuizScreen());
           case 3:
-            return CupertinoTabView(builder: (_) => const ProgressScreen());
+            return CupertinoTabView(builder: (_) => const ReadingScreen());
           case 4:
+            return CupertinoTabView(builder: (_) => const ProgressScreen());
+          case 5:
           default:
             return CupertinoTabView(builder: (_) => const SettingsScreen());
         }

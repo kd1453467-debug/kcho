@@ -92,7 +92,10 @@ class _QuizScreenState extends State<QuizScreen> {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(middle: Text('クイズ')),
+      navigationBar: const CupertinoNavigationBar(
+        transitionBetweenRoutes: false,
+        middle: Text('クイズ'),
+      ),
       child: SafeArea(
         child: switch (_phase) {
           _Phase.idle => _IdleView(onStart: _start),

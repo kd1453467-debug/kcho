@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../app_scope.dart';
+import '../services/auth_service.dart';
 import '../services/notification_service.dart';
 import '../services/settings_store.dart';
 import '../theme/app_colors.dart';
@@ -149,7 +150,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final trimmedName = _displayName.trim();
 
     return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(middle: Text('設定')),
+      navigationBar: const CupertinoNavigationBar(
+        transitionBetweenRoutes: false,
+        middle: Text('設定'),
+      ),
       child: SafeArea(
         child: _loading
             ? const Center(child: CupertinoActivityIndicator())
@@ -251,6 +255,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           style: TextStyle(color: AppColors.inkPrimary),
                         ),
                         additionalInfo: Text('${repo.totalCount}'),
+                      ),
+                    ],
+                  ),
+                  _SettingsSection(
+                    header: 'アカウント',
+                    children: [
+                      CupertinoListTile(
+                        title: const Text(
+                          'ログイン中',
+                          style: TextStyle(color: AppColors.inkPrimary),
+                        ),
+                        additionalInfo: Text(AuthService.instance.currentUser?.email ?? ''),
+                      ),
+                      CupertinoListTile(
+                        title: const Text(
+                          'ログアウト',
+                          style: TextStyle(color: AppColors.errorRed),
+                        ),
+                        onTap: () => AuthService.instance.signOut(),
                       ),
                     ],
                   ),

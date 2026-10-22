@@ -169,6 +169,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
 
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
+        transitionBetweenRoutes: false,
         middle: Text(_isEditing ? '編集' : '新規登録'),
         trailing: CupertinoButton(
           padding: EdgeInsets.zero,
