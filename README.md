@@ -84,6 +84,31 @@ open -a Simulator
 flutter run
 ```
 
+## First-time setup (macOS desktop)
+
+```sh
+export PATH="$PATH:/opt/homebrew/bin"
+flutter create --org com.example --project-name k_cho --platforms=macos .
+flutter pub get
+flutter run -d macos
+```
+
+⚠️ **Required manual step for the AI auto-fill feature.** `flutter create` generates
+a sandboxed macOS app that only grants the network **server** entitlement by default,
+so the outgoing HTTP calls to Groq's API (Settings → Groq API key → "AIで自動補完")
+are silently blocked — the app just shows a generic communication error. After
+generating `macos/`, add the client-networking entitlement to **both**
+`macos/Runner/DebugProfile.entitlements` and `macos/Runner/Release.entitlements`
+(inside the existing `<dict>`):
+
+```xml
+<key>com.apple.security.network.client</key>
+<true/>
+```
+
+This has to be redone any time `macos/` is regenerated from scratch, since that
+whole folder is gitignored (see "What's here" above).
+
 ## Data model
 
 | field            | notes                                              |

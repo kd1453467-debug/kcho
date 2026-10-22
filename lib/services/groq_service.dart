@@ -43,12 +43,18 @@ class GroqService {
     required String term,
   }) async {
     final isTango = type == EntryType.tango;
+    const multiSenseInstruction =
+        '複数の意味・用法がある場合は、主なものを全て含め、それぞれの意味の前にどんな場面で'
+        '使うかが一目でわかる短い日本語の文脈を（）で付けて'
+        '「１）（電話で）ミャンマー語訳　２）（服を）ミャンマー語訳」のように番号を付けて区切ること。'
+        '日本語の単語や例文は繰り返さず、文脈タグとミャンマー語訳だけを書くこと。'
+        '意味が1つしかない場合は番号も文脈もつけずミャンマー語訳だけを書くこと。';
     final prompt = isTango
         ? '日本語の単語「$term」について、次のJSONだけを返してください。説明文は付けないこと。\n'
-            '{"reading": "ひらがなのよみかた", "meaningMy": "ミャンマー語での意味", '
+            '{"reading": "ひらがなのよみかた", "meaningMy": "ミャンマー語での意味（$multiSenseInstruction）", '
             '"exampleSentence": "その単語を使った自然な日本語の例文"}'
         : '日本語の文法パターン「$term」について、次のJSONだけを返してください。説明文は付けないこと。\n'
-            '{"meaningMy": "ミャンマー語でのこの文法の意味・使い方", '
+            '{"meaningMy": "ミャンマー語でのこの文法の意味・使い方（$multiSenseInstruction）", '
             '"exampleSentence": "そのパターンを使った自然な日本語の例文"}';
 
     final response = await http.post(
