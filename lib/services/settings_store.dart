@@ -12,6 +12,12 @@ class SettingsStore {
   static const int defaultReminderHour = 20;
   static const int defaultReminderMinute = 0;
 
+  /// Baked in at build time via `--dart-define=GROQ_API_KEY=...` — never
+  /// written to a file, so it's never committed to the (public) repo. Empty
+  /// in a plain `flutter run`/checkout, which leaves the AI features asking
+  /// the user for their own key, same as before.
+  static const String _builtInGroqApiKey = String.fromEnvironment('GROQ_API_KEY');
+
   Future<String> getDisplayName() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_keyDisplayName) ?? '';
@@ -46,11 +52,21 @@ class SettingsStore {
     await prefs.setInt(_keyReminderMinute, minute);
   }
 
-  /// Groq API key for the AI auto-fill feature (see GroqService). Kept
-  /// in on-device prefs only — never committed to source control.
-  Future<String> getGroqApiKey() async {
+  /// The key the user explicitly typed into Settings, if any — empty
+  /// otherwise. Used only to populate the Settings text field, so a
+  /// build-time [_builtInGroqApiKey] never shows up (and can't be copied)
+  /// from the UI.
+  Future<String> getStoredGroqApiKey() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_keyGroqApiKey) ?? '';
+  }
+
+  /// Groq API key for the AI auto-fill feature (see GroqService). A value
+  /// the user typed into Settings always wins; otherwise falls back to the
+  /// build-time [_builtInGroqApiKey], if any.
+  Future<String> getGroqApiKey() async {
+    final stored = await getStoredGroqApiKey();
+    return stored.isNotEmpty ? stored : _builtInGroqApiKey;
   }
 
   Future<void> setGroqApiKey(String value) async {

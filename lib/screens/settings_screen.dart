@@ -42,7 +42,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final name = await _settingsStore.getDisplayName();
     final enabled = await _settingsStore.getReminderEnabled();
     final (hour, minute) = await _settingsStore.getReminderTime();
-    final groqKey = await _settingsStore.getGroqApiKey();
+    final groqKey = await _settingsStore.getStoredGroqApiKey();
     if (!mounted) return;
     setState(() {
       _displayName = name;
