@@ -3,7 +3,6 @@ import 'package:flutter/cupertino.dart';
 import '../app_scope.dart';
 import '../models/entry.dart';
 import '../services/groq_service.dart';
-import '../services/settings_store.dart';
 import '../theme/app_colors.dart';
 import '../widgets/type_segmented_control.dart';
 
@@ -19,8 +18,6 @@ class AddEntryScreen extends StatefulWidget {
 }
 
 class _AddEntryScreenState extends State<AddEntryScreen> {
-  final _settingsStore = SettingsStore();
-
   late final TextEditingController _term;
   late final TextEditingController _reading;
   late final TextEditingController _meaning;
@@ -93,15 +90,9 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
       return;
     }
 
-    final apiKey = await _settingsStore.getGroqApiKey();
-    if (apiKey.isEmpty) {
-      await _showAlert('APIキーが未設定です', '設定タブで Groq API キーを入力してください。');
-      return;
-    }
-
     setState(() => _isAutoFilling = true);
     try {
-      final result = await GroqService.autoFill(apiKey: apiKey, type: _type, term: term);
+      final result = await GroqService.autoFill(type: _type, term: term);
       if (!mounted) return;
       setState(() {
         if (_type == EntryType.tango && (result.reading ?? '').isNotEmpty) {

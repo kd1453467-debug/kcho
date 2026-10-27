@@ -93,10 +93,10 @@ flutter pub get
 flutter run -d macos
 ```
 
-⚠️ **Required manual step for the AI auto-fill feature.** `flutter create` generates
-a sandboxed macOS app that only grants the network **server** entitlement by default,
-so the outgoing HTTP calls to Groq's API (Settings → Groq API key → "AIで自動補完")
-are silently blocked — the app just shows a generic communication error. After
+⚠️ **Required manual step for the AI features** (auto-fill, reading passages). `flutter
+create` generates a sandboxed macOS app that only grants the network **server**
+entitlement by default, so the outgoing HTTP calls to Groq's API are silently
+blocked — the app just shows a generic communication error. After
 generating `macos/`, add the client-networking entitlement to **both**
 `macos/Runner/DebugProfile.entitlements` and `macos/Runner/Release.entitlements`
 (inside the existing `<dict>`):
@@ -108,6 +108,24 @@ generating `macos/`, add the client-networking entitlement to **both**
 
 This has to be redone any time `macos/` is regenerated from scratch, since that
 whole folder is gitignored (see "What's here" above).
+
+## AI features (auto-fill, reading passages)
+
+Both call [Groq](https://console.groq.com) directly from the app. There's no
+Settings screen for an API key — the key is baked in at **build time** via
+`--dart-define`, so it's never written to a file or committed to this (public)
+repo:
+
+```sh
+flutter run -d macos --dart-define=GROQ_API_KEY=your_key_here
+```
+
+Without `--dart-define`, the key compiles in empty and the AI features show
+"AI機能は現在利用できません" instead of failing silently.
+
+The live web build (GitHub Pages) gets its key from the repo's
+`GROQ_API_KEY` [Actions secret](../../settings/secrets/actions) — see
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml).
 
 ## Data model
 

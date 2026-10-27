@@ -31,23 +31,25 @@ class GroqReadingResult {
 /// features: auto-filling a new entry's fields, and generating JLPT reading
 /// passages.
 ///
-/// The API key lives in on-device settings (see [SettingsStore]), not in
-/// source control. Calling Groq straight from the client means the key ships
-/// inside the app bundle — acceptable while this is a local prototype, but
-/// it should move behind a backend proxy before any public release so the
-/// key can't be extracted from the app and abused.
+/// The API key is baked in at build time via `--dart-define=GROQ_API_KEY=...`
+/// (see the GitHub Actions workflow for the web build) — never written to a
+/// file, so it's never committed to this public repo. Calling Groq straight
+/// from the client still means the key ships inside the built app/bundle —
+/// acceptable for a free-tier key on a small prototype, but it should move
+/// behind a backend proxy before this has real users, so the key can't be
+/// extracted and abused.
 class GroqService {
   GroqService._();
 
   static const String _model = 'openai/gpt-oss-20b';
   static const String _endpoint = 'https://api.groq.com/openai/v1/chat/completions';
+  static const String _apiKey = String.fromEnvironment('GROQ_API_KEY');
 
   /// Asks Groq to fill in the fields for [term]. Throws on any
   /// network/API/parse failure — callers should surface the error rather
   /// than silently leaving fields blank, since a wrong auto-fill is worse
   /// than none.
   static Future<GroqAutoFillResult> autoFill({
-    required String apiKey,
     required EntryType type,
     required String term,
   }) async {
@@ -66,7 +68,7 @@ class GroqService {
             '{"meaningMy": "ミャンマー語でのこの文法の意味・使い方（$multiSenseInstruction）", '
             '"exampleSentence": "そのパターンを使った自然な日本語の例文"}';
 
-    final content = await _complete(apiKey: apiKey, prompt: prompt);
+    final content = await _complete(prompt: prompt);
     final Map<String, dynamic> parsed;
     try {
       parsed = jsonDecode(content) as Map<String, dynamic>;
@@ -87,7 +89,6 @@ class GroqService {
   /// token usage low enough to stay comfortably inside Groq's free-tier
   /// per-minute limit.
   static Future<GroqReadingResult> generateReadingPassage({
-    required String apiKey,
     required String level,
   }) async {
     final prompt = 'JLPT $levelレベルの読解問題を1つ作成してください。'
@@ -99,7 +100,7 @@ class GroqService {
         '{"question": "設問文", "options": ["選択肢1","選択肢2","選択肢3","選択肢4"], "correctIndex": 0}'
         ']}';
 
-    final content = await _complete(apiKey: apiKey, prompt: prompt, reasoningEffort: 'low');
+    final content = await _complete(prompt: prompt, reasoningEffort: 'low');
     final Map<String, dynamic> parsed;
     try {
       parsed = jsonDecode(content) as Map<String, dynamic>;
@@ -120,18 +121,24 @@ class GroqService {
 
   /// Shared request/response handling for both AI features: posts [prompt]
   /// as the sole user message and returns the assistant's raw JSON-string
-  /// content. Throws [GroqServiceException] on any HTTP or shape failure;
-  /// callers still need to `jsonDecode` the returned string themselves since
-  /// each feature expects a different JSON shape back.
+  /// content. Throws [GroqServiceException] on any HTTP or shape failure
+  /// (including a missing build-time key); callers still need to
+  /// `jsonDecode` the returned string themselves since each feature expects
+  /// a different JSON shape back.
   static Future<String> _complete({
-    required String apiKey,
     required String prompt,
     String? reasoningEffort,
   }) async {
+    if (_apiKey.isEmpty) {
+      throw GroqServiceException(
+        'AI機能は現在利用できません（ビルドにAPIキーが設定されていません）。',
+      );
+    }
+
     final response = await http.post(
       Uri.parse(_endpoint),
       headers: {
-        'Authorization': 'Bearer $apiKey',
+        'Authorization': 'Bearer $_apiKey',
         'Content-Type': 'application/json',
       },
       body: jsonEncode({
@@ -146,7 +153,7 @@ class GroqService {
 
     if (response.statusCode != 200) {
       throw GroqServiceException(
-        'Groq API がエラーを返しました (${response.statusCode})。APIキーを確認してください。',
+        'Groq API がエラーを返しました (${response.statusCode})。',
       );
     }
 

@@ -4,7 +4,6 @@ import 'package:hive/hive.dart';
 import '../app_scope.dart';
 import '../models/reading_passage.dart';
 import '../services/groq_service.dart';
-import '../services/settings_store.dart';
 import '../theme/app_colors.dart';
 import 'reading_detail_screen.dart';
 
@@ -18,22 +17,15 @@ class ReadingScreen extends StatefulWidget {
 }
 
 class _ReadingScreenState extends State<ReadingScreen> {
-  final _settingsStore = SettingsStore();
-
   String _level = 'N5';
   bool _generating = false;
 
   Future<void> _generate() async {
     final repo = AppScope.readingOf(context);
-    final apiKey = await _settingsStore.getGroqApiKey();
-    if (apiKey.isEmpty) {
-      await _showAlert('APIキーが未設定です', '設定タブで Groq API キーを入力してください。');
-      return;
-    }
 
     setState(() => _generating = true);
     try {
-      final result = await GroqService.generateReadingPassage(apiKey: apiKey, level: _level);
+      final result = await GroqService.generateReadingPassage(level: _level);
       final passage = await repo.create(
         level: _level,
         passage: result.passage,
