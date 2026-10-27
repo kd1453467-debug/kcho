@@ -18,6 +18,7 @@ class ReadingScreen extends StatefulWidget {
 
 class _ReadingScreenState extends State<ReadingScreen> {
   String _level = 'N5';
+  ReadingType _type = ReadingType.shortPassage;
   bool _generating = false;
 
   Future<void> _generate() async {
@@ -25,7 +26,7 @@ class _ReadingScreenState extends State<ReadingScreen> {
 
     setState(() => _generating = true);
     try {
-      final result = await GroqService.generateReadingPassage(level: _level);
+      final result = await GroqService.generateReadingPassage(level: _level, type: _type);
       final passage = await repo.create(
         level: _level,
         passage: result.passage,
@@ -61,8 +62,7 @@ class _ReadingScreenState extends State<ReadingScreen> {
     );
   }
 
-  Widget _levelChip(String level) {
-    final selected = level == _level;
+  Widget _chip({required String label, required bool selected, required VoidCallback onTap}) {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: CupertinoButton(
@@ -70,14 +70,58 @@ class _ReadingScreenState extends State<ReadingScreen> {
         minimumSize: const Size(0, 0),
         color: selected ? AppColors.hankoRed : AppColors.cardBackground,
         borderRadius: BorderRadius.circular(8),
-        onPressed: _generating ? null : () => setState(() => _level = level),
+        onPressed: _generating ? null : onTap,
         child: Text(
-          level,
+          label,
           style: TextStyle(
             color: selected ? CupertinoColors.white : AppColors.inkPrimary,
             fontWeight: FontWeight.w600,
             fontSize: 14,
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _levelChip(String level) {
+    return _chip(
+      label: level,
+      selected: level == _level,
+      onTap: () => setState(() => _level = level),
+    );
+  }
+
+  Widget _typeChip(ReadingType type) {
+    final selected = type == _type;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8, bottom: 8),
+      child: CupertinoButton(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        minimumSize: const Size(0, 0),
+        color: selected ? AppColors.hankoRed : AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(8),
+        onPressed: _generating ? null : () => setState(() => _type = type),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              type.label,
+              style: TextStyle(
+                color: selected ? CupertinoColors.white : AppColors.inkPrimary,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+            Text(
+              type.chipSubtitle,
+              style: TextStyle(
+                color: selected
+                    ? CupertinoColors.white.withValues(alpha: 0.85)
+                    : AppColors.inkSecondary,
+                fontSize: 11,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -98,6 +142,10 @@ class _ReadingScreenState extends State<ReadingScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Row(children: _levels.map(_levelChip).toList()),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Wrap(children: ReadingType.values.map(_typeChip).toList()),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),

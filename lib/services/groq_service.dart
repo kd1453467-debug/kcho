@@ -84,17 +84,20 @@ class GroqService {
   }
 
   /// Generates one JLPT [level] (e.g. "N5") reading passage with multiple
-  /// comprehension questions. Uses a lower reasoning effort than [autoFill]
-  /// since a passage + questions is a much larger response — this keeps
-  /// token usage low enough to stay comfortably inside Groq's free-tier
-  /// per-minute limit.
+  /// comprehension questions, in the requested [type] (see [ReadingType] —
+  /// mirrors the exam's own 短文/中文/長文/情報検索/統合理解 categories).
+  /// Uses a lower reasoning effort than [autoFill] since a passage +
+  /// questions is a much larger response — this keeps token usage low
+  /// enough to stay comfortably inside Groq's free-tier per-minute limit
+  /// even for [ReadingType.longPassage].
   static Future<GroqReadingResult> generateReadingPassage({
     required String level,
+    required ReadingType type,
   }) async {
     final prompt = 'JLPT $levelレベルの読解問題を1つ作成してください。'
-        '日本語の文章は100〜200字程度で、$levelの学習者が読める語彙・文法だけを使うこと。'
-        '文章の内容について理解を確認する設問を3つ作り、各設問に4つの選択肢と、'
-        '正解のインデックス（0始まり）を付けること。'
+        '${type.promptInstruction}'
+        '$levelの学習者が読める語彙・文法だけを使うこと。'
+        '各設問に4つの選択肢と、正解のインデックス（0始まり）を付けること。'
         '次のJSON形式だけを返してください。説明文は付けないこと。\n'
         '{"passage": "日本語の文章", "questions": ['
         '{"question": "設問文", "options": ["選択肢1","選択肢2","選択肢3","選択肢4"], "correctIndex": 0}'
